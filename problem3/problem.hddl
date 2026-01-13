@@ -1,0 +1,43 @@
+(define (problem p01)
+    (:domain interplanetary_museum_vault_htn)
+    
+    (:objects
+        alpha_bot - alpha_robot
+        beta_bot - beta_robot
+        entrance hall_alpha hall_beta cryo_chamber stasis_lab pod_area - location
+        pod1 pod2 - pod
+        artifact_a1 artifact_a2 - artifact
+        artifact_b1 artifact_b2 - artifact
+    )
+
+    (:htn
+        :parameters ()
+        :subtasks (and
+            (task0 (achieve_all_artifacts_in_stasis))
+        )
+    )
+    
+    (:init
+        (at alpha_bot entrance)
+        (at beta_bot entrance)
+        (at_artifact artifact_a1 hall_alpha)
+        (at_artifact artifact_a2 hall_alpha)
+        (at_artifact artifact_b1 hall_beta)
+        (at_artifact artifact_b2 hall_beta)
+        (is_alpha_art artifact_a1)
+        (is_alpha_art artifact_a2)
+        (is_beta_art artifact_b1)
+        (is_beta_art artifact_b2)
+        (pod_at pod1 pod_area)
+        (pod_at pod2 pod_area)
+        (pod_free pod1)
+        (pod_free pod2)
+        (pod_slot_available)
+        (stable entrance)
+        (stable hall_alpha)
+        (stable cryo_chamber)
+        (stable stasis_lab)
+        (stable pod_area)
+    )
+    
+)

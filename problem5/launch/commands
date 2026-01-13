@@ -1,0 +1,67 @@
+set instance robot_alpha alpha_robot
+set instance robot_beta beta_robot
+set instance entrance location
+set instance hall_alpha location
+set instance hall_beta location
+set instance cryo_chamber location
+set instance stasis_lab location
+set instance pod_area location
+set instance pod1 pod
+set instance pod2 pod
+set instance artifact_a artifact
+set instance artifact_b artifact
+
+get problem instances
+
+set predicate (at_robot robot_alpha entrance)
+set predicate (at_robot robot_beta entrance)
+set predicate (sealed robot_alpha)
+set predicate (sealed robot_beta)
+
+set predicate (at_artifact artifact_a hall_alpha)
+set predicate (at_artifact artifact_b hall_beta)
+
+set predicate (is_alpha_art artifact_a)
+set predicate (is_beta_art artifact_b)
+
+set predicate (uncooled artifact_a)
+set predicate (antivibration_off artifact_b)
+
+set predicate (pod_at pod1 pod_area)
+set predicate (pod_at pod2 pod_area)
+set predicate (pod_free pod1)
+set predicate (pod_free pod2)
+
+set predicate (stable entrance)
+set predicate (stable hall_alpha)
+set predicate (stable cryo_chamber)
+set predicate (stable stasis_lab)
+set predicate (stable pod_area)
+set predicate (unstable hall_beta)
+
+set predicate (is_hall_alpha hall_alpha)
+set predicate (is_hall_beta hall_beta)
+set predicate (is_cryo_chamber cryo_chamber)
+set predicate (is_stasis_lab stasis_lab)
+set predicate (is_pod_area pod_area)
+
+set predicate (connected entrance hall_alpha)
+set predicate (connected hall_alpha entrance)
+set predicate (connected entrance hall_beta)
+set predicate (connected hall_beta entrance)
+set predicate (connected hall_alpha cryo_chamber)
+set predicate (connected cryo_chamber hall_alpha)
+set predicate (connected hall_beta pod_area)
+set predicate (connected pod_area hall_beta)
+set predicate (connected cryo_chamber stasis_lab)
+set predicate (connected stasis_lab cryo_chamber)
+set predicate (connected pod_area stasis_lab)
+set predicate (connected stasis_lab pod_area)
+
+get problem predicates
+
+set goal (and (at_artifact artifact_a stasis_lab) (at_artifact artifact_b stasis_lab))
+
+get problem goal
+
+get plan

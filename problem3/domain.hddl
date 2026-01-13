@@ -1,0 +1,289 @@
+(define (domain interplanetary_museum_vault_htn)
+    (:requirements :typing :hierachie)
+    
+    (:types
+        artifact location pod - object
+        robot - object
+        alpha_robot beta_robot - robot
+    )
+    
+    (:predicates
+        (at ?r - robot ?loc - location)
+        (at_artifact ?a - artifact ?loc - location)
+        (carrying ?r - robot ?a - artifact)
+        (sealed ?r - robot)
+        (cooled ?a - artifact)
+        (antivibration_on ?a - artifact)
+        (ready_for_stasis ?a - artifact)
+        (is_alpha_art ?a - artifact)
+        (is_beta_art ?a - artifact)
+        (pod_at ?p - pod ?loc - location)
+        (pod_free ?p - pod)
+        (pod_occupied ?a - artifact ?p - pod)
+        (pod_slot_available)
+        (stable ?loc - location)
+    )
+
+    ;; --- TASKS (abstract) ---
+    (:task achieve_all_artifacts_in_stasis
+        :parameters ()
+        :precondition ()
+        :effect ()
+    )
+    
+    (:task process_alpha_artifacts
+        :parameters ()
+        :precondition ()
+        :effect ()
+    )
+    
+    (:task process_beta_artifacts
+        :parameters ()
+        :precondition ()
+        :effect ()
+    )
+    
+    (:task process_alpha_artifact
+        :parameters (?a - artifact ?r - alpha_robot)
+        :precondition ()
+        :effect ()
+    )
+    
+    (:task process_beta_artifact
+        :parameters (?a - artifact ?r - beta_robot ?p - pod)
+        :precondition ()
+        :effect ()
+    )
+    
+    ;; --- METHODS ---
+    (:method main_method
+        :parameters ()
+        :task (achieve_all_artifacts_in_stasis)
+        :subtasks (and
+            (task0 (process_alpha_artifacts))
+            (task1 (process_beta_artifacts))
+        )
+    )
+    
+    (:method process_all_alpha
+        :parameters ()
+        :task (process_alpha_artifacts)
+        :subtasks (and
+            (task0 (process_alpha_artifact artifact_a1 alpha_bot))
+            (task1 (process_alpha_artifact artifact_a2 alpha_bot))
+        )
+        :ordering (and (task0 < task1))
+    )
+    
+    (:method process_single_alpha
+      :parameters (?a - artifact ?r - alpha_robot)
+      :task (process_alpha_artifact ?a ?r)
+      :precondition (is_alpha_art ?a)
+      :subtasks (and
+          (task0 (seal ?r))
+          (task1 (move ?r entrance hall_alpha))
+          (task2 (pick_hall_alpha ?r ?a))
+          (task3 (move ?r hall_alpha cryo_chamber))
+          (task4 (drop_at_cryo ?r ?a))
+          (task5 (cool ?r ?a))
+          (task6 (pick_from_cryo ?r ?a))
+          (task7 (move ?r cryo_chamber stasis_lab))
+          (task8 (deliver_to_stasis ?r ?a))
+          (task9 (move ?r stasis_lab entrance))   ;; return to start
+          (task10 (unseal ?r))
+      )
+      :ordering (and (task0 < task1) (task1 < task2) (task2 < task3) (task3 < task4) (task4 < task5) (task5 < task6) (task6 < task7) (task7 < task8) (task8 < task9) (task9 < task10))
+    )
+    
+    (:method process_all_beta
+        :parameters ()
+        :task (process_beta_artifacts)
+        :subtasks (and
+            (task0 (stabilize))
+            (task1 (process_beta_artifact artifact_b1 beta_bot pod1))
+            (task2 (process_beta_artifact artifact_b2 beta_bot pod2))
+        )
+        :ordering (and (task0 < task1) (task1 < task2))
+    )
+
+    (:method process_single_beta
+        :parameters (?a - artifact ?r - beta_robot ?p - pod)
+        :task (process_beta_artifact ?a ?r ?p)
+        :precondition (and (is_beta_art ?a) (pod_free ?p))
+        :subtasks (and
+            (task0 (seal ?r))
+            (task1 (move ?r entrance hall_beta))
+            (task2 (pick_hall_beta ?r ?a))
+            (task3 (move ?r hall_beta pod_area))
+            (task4 (drop_at_pod ?r ?a ?p))
+            (task5 (activate_antivibration ?r ?a ?p))
+            (task6 (pick_from_pod ?r ?a ?p))
+            (task7 (move ?r pod_area stasis_lab))
+            (task8 (deliver_to_stasis ?r ?a))
+            (task9 (move ?r stasis_lab entrance))
+            (task10 (unseal ?r))
+        )
+        :ordering (and (task0 < task1) (task1 < task2) (task2 < task3) (task3 < task4) (task4 < task5) (task5 < task6) (task6 < task7) (task7 < task8) (task8 < task9) (task9 < task10))
+    )   
+    
+    ;; --- ACTIONS ---
+    (:action move
+        :parameters (?r - robot ?from - location ?to - location)
+        :precondition (and 
+            (at ?r ?from)
+            (stable ?to)
+            (sealed ?r)
+        )
+        :effect (and 
+            (at ?r ?to) 
+            (not (at ?r ?from))
+        )
+    )
+    
+    (:action seal
+        :parameters (?r - robot)
+        :precondition (not (sealed ?r))
+        :effect (sealed ?r)
+    )
+
+    (:action unseal
+        :parameters (?r - robot)
+        :precondition (sealed ?r)
+        :effect (not (sealed ?r))
+    )
+    
+    (:action pick_hall_alpha
+        :parameters (?r - alpha_robot ?a - artifact)
+        :precondition (and 
+            (at ?r hall_alpha)
+            (at_artifact ?a hall_alpha)
+            (is_alpha_art ?a)
+            (not (cooled ?a))
+        )
+        :effect (and 
+            (carrying ?r ?a)
+            (not (at_artifact ?a hall_alpha))
+        )
+    )
+    
+    (:action drop_at_cryo
+        :parameters (?r - robot ?a - artifact)
+        :precondition (and 
+            (at ?r cryo_chamber)
+            (carrying ?r ?a)
+            (is_alpha_art ?a)
+            (not (cooled ?a))
+        )
+        :effect (and 
+            (at_artifact ?a cryo_chamber)
+            (not (carrying ?r ?a))
+        )
+    )
+    
+    (:action cool
+        :parameters (?r - robot ?a - artifact)
+        :precondition (and 
+            (at ?r cryo_chamber)
+            (at_artifact ?a cryo_chamber)
+            (is_alpha_art ?a)
+            (not (cooled ?a))
+        )
+        :effect (and 
+            (cooled ?a)
+            (ready_for_stasis ?a)
+        )
+    )
+    
+    (:action pick_from_cryo
+        :parameters (?r - robot ?a - artifact)
+        :precondition (and 
+            (at ?r cryo_chamber)
+            (at_artifact ?a cryo_chamber)
+            (is_alpha_art ?a)
+            (cooled ?a)
+        )
+        :effect (and 
+            (carrying ?r ?a)
+            (not (at_artifact ?a cryo_chamber))
+        )
+    )
+    
+    (:action pick_hall_beta
+        :parameters (?r - beta_robot ?a - artifact)
+        :precondition (and 
+            (at ?r hall_beta)
+            (at_artifact ?a hall_beta)
+            (is_beta_art ?a)
+            (stable hall_beta)
+            (not (antivibration_on ?a))
+        )
+        :effect (and 
+            (carrying ?r ?a)
+            (not (at_artifact ?a hall_beta))
+        )
+    )
+    
+    (:action drop_at_pod
+        :parameters (?r - robot ?a - artifact ?p - pod)
+        :precondition (and 
+            (at ?r pod_area)
+            (carrying ?r ?a)
+            (is_beta_art ?a)
+            (pod_free ?p)
+            (pod_at ?p pod_area)
+            (not (antivibration_on ?a))
+            (pod_slot_available)
+        )
+        :effect (and 
+            (pod_occupied ?a ?p)
+            (not (carrying ?r ?a))
+            (not (pod_free ?p))
+        )
+    )
+    
+    (:action activate_antivibration
+        :parameters (?r - robot ?a - artifact ?p - pod)
+        :precondition (and 
+            (at ?r pod_area)
+            (pod_occupied ?a ?p)
+            (is_beta_art ?a)
+            (not (antivibration_on ?a))
+        )
+        :effect (and 
+            (antivibration_on ?a)
+            (ready_for_stasis ?a)
+        )
+    )
+    
+    (:action pick_from_pod
+        :parameters (?r - robot ?a - artifact ?p - pod)
+        :precondition (and 
+            (at ?r pod_area)
+            (pod_occupied ?a ?p)
+            (antivibration_on ?a)
+        )
+        :effect (and 
+            (carrying ?r ?a)
+            (pod_free ?p)
+            (not (pod_occupied ?a ?p))
+        )
+    )
+    
+    (:action deliver_to_stasis
+        :parameters (?r - robot ?a - artifact)
+        :precondition (and 
+            (at ?r stasis_lab)
+            (carrying ?r ?a)
+        )
+        :effect (and 
+            (at_artifact ?a stasis_lab)
+            (not (carrying ?r ?a))
+        )
+    )
+    
+    (:action stabilize
+        :parameters ()
+        :precondition (not (stable hall_beta))
+        :effect (stable hall_beta)
+    )
+)
